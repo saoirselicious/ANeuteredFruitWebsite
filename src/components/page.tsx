@@ -220,9 +220,8 @@ export const Footer: React.FC = () => (
         <div className="footer__logo">          <img src={peach} className="peach" alt="A Neutered Fruit Peach logo" />
         </div>
         <div className="footer__social">
-            <a href="#">Instagram</a>
-            <a href="#">YouTube</a>
-            <a href="#">Spotify</a>
+            <a href="https://www.instagram.com/a_neutered_fruit/"><img src={instagram} className="social-icon" alt="Instagram" /></a>
+            <a href="https://aneuteredfruit.bandcamp.com/album/we-dont-get-out-much"><img src={bandcamp} className="social-icon" alt="Bandcamp" /></a>
         </div>
     </footer>
 );
