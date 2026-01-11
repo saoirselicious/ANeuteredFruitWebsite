@@ -1,0 +1,165 @@
+:root {
+  --font-logo: 'Throrian Commonface', serif;
+  --font-heading: 'Bebas Neue', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+  --background-color: #E6DFD6;
+  --primary-color: #CE8E85;
+  --secondary-color: #4f5c43;
+  --text-color: #333333;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--text-color);
+  margin: 0;
+  background-color: var(--background-color);
+  font-size: larger;
+  padding: 2rem;
+  margin: auto;
+}
+
+.header__logo {
+  height: 40px;
+  width: 40px;
+}
+
+.header,
+.footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.header__nav a,
+.footer__social a {
+  margin-left: 1rem;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 4rem 2rem;
+}
+
+
+
+.hero__buttons .btn {
+  margin-right: 1rem;
+
+}
+
+a {
+  all: unset;
+}
+
+.hero__image img {
+  width: 100%;
+  height: auto;
+}
+
+.logo {
+  height: 15em;
+  max-width: 100%;
+}
+
+.peach {
+  height: 3em;
+}
+
+.overview_content {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.bio,
+.sound,
+.video,
+.overview,
+.contacts {
+  padding: 2rem;
+  max-width: 900px;
+  margin: auto;
+
+  h2 {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+}
+
+
+.sound__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.gallery__thumb {
+  cursor: pointer;
+}
+
+.image-viewer {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-viewer__actions {
+  margin-top: 1rem;
+}
+
+.video__player {
+  width: 100%;
+  max-width: 800px;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  background: var(--primary-color);
+  font-size: 16px;
+  border-radius: 42px;
+  padding: 14px 28px;
+  color: #ffffff;
+  /* adjust if needed */
+  border: 2px solid var(--background-color);
+  /* outer border */
+  box-shadow:
+    0 0 0 2px #ce8e85;
+  /* inner border */
+}
+
+
+.divider {
+  height: 2px;
+  background-color: var(--secondary-color);
+  margin: 2rem 0;
+}
+
+details summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details summary h4 {
+  display: inline;
+}
+
+details {
+  border-bottom: 1px solid var(--secondary-color);
+  padding-bottom: 0.5rem;
+}
