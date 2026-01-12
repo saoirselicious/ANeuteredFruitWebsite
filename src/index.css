@@ -1,33 +1,69 @@
+/* =====================
+   ROOT VARIABLES
+===================== */
 :root {
   --font-logo: 'Throrian Commonface', serif;
   --font-heading: 'Bebas Neue', sans-serif;
   --font-body: 'Space Grotesk', sans-serif;
-  --background-color: #E6DFD6;
-  --primary-color: #CE8E85;
+
+  --background-color: #e6dfd6;
+  --primary-color: #ce8e85;
   --secondary-color: #4f5c43;
   --text-color: #333333;
+
+  --section-max-width: 900px;
+}
+
+/* =====================
+   GLOBAL RESET / BASE
+===================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
-  font-family: var(--font-body);
-  color: var(--text-color);
   margin: 0;
-  background-color: var(--background-color);
-  font-size: larger;
   padding: 2rem;
-  margin: auto;
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  overflow-x: hidden;
 }
 
-.header__logo {
-  height: 40px;
-  width: 40px;
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* =====================
+   HEADER / FOOTER
+===================== */
 .header,
 .footer {
   display: flex;
   justify-content: space-between;
-  padding: 1rem;
+  align-items: center;
+  padding: 1rem 2rem;
+}
+
+.header__nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.header__logo,
+.footer__logo {
+  width: 40px;
+  height: 40px;
 }
 
 .header__nav a,
@@ -35,115 +71,251 @@ body {
   margin-left: 1rem;
 }
 
+.burger {
+  display: none;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.peach {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .burger {
+    display: block;
+  }
+
+  .header__nav {
+    position: absolute;
+    top: 120px;
+    right: 0px;
+    background-color: var(--secondary-color);
+    flex-direction: column;
+    width: 100%;
+    display: none;
+    padding: 1rem;
+    color: var(--background-color)
+  }
+
+  .header__nav a {
+    border-bottom:
+      1px solid var(--background-color);
+  }
+
+
+
+
+  .header__nav.is-open {
+    display: flex;
+  }
+}
+
+/* =====================
+   HERO
+===================== */
 .hero {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 2rem;
   padding: 4rem 2rem;
+  align-items: center;
 }
 
-
-
-.hero__buttons .btn {
-  margin-right: 1rem;
-
-}
-
-a {
-  all: unset;
+.logo {
+  height: 12rem;
+  max-width: 100%;
+  margin-bottom: 1.5rem;
 }
 
 .hero__image img {
   width: 100%;
   height: auto;
+  object-fit: cover;
 }
 
-.logo {
-  height: 15em;
-  max-width: 100%;
+
+.hero__buttons .btn {
+  margin-right: 1rem;
 }
 
-.peach {
-  height: 3em;
+@media (max-width: 768px) {
+  .hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .hero__text {
+    order: 2;
+  }
+
+  .hero__image {
+    order: 1;
+  }
+
+  .logo {
+    height: 9rem;
+    margin: 0 auto 1rem;
+  }
+
+  .hero__buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
 }
 
-.overview_content {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-}
-
+/* =====================
+   SHARED SECTION STYLES
+===================== */
 .bio,
 .sound,
 .video,
 .overview,
-.contacts {
+.contacts,
+.gallery {
+  max-width: var(--section-max-width);
+  margin: 0 auto;
   padding: 2rem;
-  max-width: 900px;
-  margin: auto;
-
-  h2 {
-    font-family: var(--font-heading);
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-  }
 }
 
+.bio h2,
+.sound h2,
+.video h2,
+.overview h2,
+.contacts h2,
+.gallery h2 {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
 
+/* =====================
+   OVERVIEW
+===================== */
+.overview_content {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+}
+
+/* =====================
+   SOUND & STYLE
+===================== */
 .sound__grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
 }
 
+/* =====================
+   GALLERY
+===================== */
 .gallery__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  width: 100vw;
+  padding: 2rem;
+  margin-left: calc(50% - 50vw);
 }
 
 .gallery__thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
   cursor: pointer;
+  border-radius: 8px;
+  transition: transform 0.2s ease;
 }
 
+
+.gallery__thumb:hover {
+  transform: scale(1.02);
+}
+
+@media (max-width: 768px) {
+  .gallery__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+
+/* =====================
+   IMAGE VIEWER
+===================== */
 .image-viewer {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  z-index: 1000;
+}
+
+.image-viewer img {
+  max-height: 90vh;
+  max-width: 90vw;
+  object-fit: contain;
+}
+
+.image-viewer__close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
 }
 
 .image-viewer__actions {
   margin-top: 1rem;
 }
 
+
+/* =====================
+   VIDEO
+===================== */
 .video__player {
   width: 100%;
   max-width: 800px;
 }
 
+/* =====================
+   BUTTONS
+===================== */
 .btn {
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  background: var(--primary-color);
-  font-size: 16px;
-  border-radius: 42px;
   padding: 14px 28px;
-  color: #ffffff;
-  /* adjust if needed */
+  font-size: 16px;
+  cursor: pointer;
+  color: #fff;
+  background: var(--primary-color);
+  border-radius: 42px;
   border: 2px solid var(--background-color);
-  /* outer border */
-  box-shadow:
-    0 0 0 2px #ce8e85;
-  /* inner border */
+  box-shadow: 0 0 0 2px var(--primary-color);
 }
 
-
+/* =====================
+   DIVIDER
+===================== */
 .divider {
   height: 2px;
   background-color: var(--secondary-color);
   margin: 2rem 0;
+}
+
+/* =====================
+   DETAILS / SUMMARY
+===================== */
+details {
+  border-bottom: 1px solid var(--secondary-color);
+  padding-bottom: 0.5rem;
 }
 
 details summary {
@@ -157,9 +329,4 @@ details summary::-webkit-details-marker {
 
 details summary h4 {
   display: inline;
-}
-
-details {
-  border-bottom: 1px solid var(--secondary-color);
-  padding-bottom: 0.5rem;
 }

@@ -4,20 +4,41 @@ import logo from "../assets/type.png";
 import hero from "../assets/hero-smaller.jpg";
 import bandcamp from "../assets/bandcamp.png";
 import instagram from "../assets/instagram.png";
+import videoSnap from "../assets/music-video-snap.png";
+import livePerformance from "../assets/live-photo.jpeg";
+import mainlogo from "../assets/logo.png";
+
 /* =====================
    HEADER
 ===================== */
-export const Header: React.FC = () => (
-    <header className="header">
-        <div className="header__logo"> <img src={peach} className="peach" alt="A Neutered Fruit Peach logo" /></div>
-        <nav className="header__nav">
-            <a href="#overview"><button className="btn">Overview</button></a>
-            <a href="#bio"><button className="btn">Bio</button></a>
-            <a href="#media"><button className="btn">Media</button></a>
-            <a href="#contact"><button className="btn">Contact</button></a>
-        </nav>
-    </header>
-);
+export const Header: React.FC = () => {
+
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    return (
+
+        <header className="header">
+            <div className="header__logo">
+                <img src={peach} className="peach" alt="Logo" />
+            </div>
+
+            <button
+                className="burger"
+                onClick={() => setMenuOpen(!menuOpen)}
+                aria-label="Toggle menu"
+            >
+                ☰
+            </button>
+
+            <nav className={`header__nav ${menuOpen ? 'is-open' : ''}`}>
+                <a href="#overview">Overview</a>
+                <a href="#bio">Bio</a>
+                <a href="#media">Media</a>
+                <a href="#contact">Contact</a>
+            </nav>
+        </header>
+    );
+}
 
 /* =====================
    HERO
@@ -28,7 +49,7 @@ export const Hero: React.FC = () => (
             <div className="ProjectName"> <img src={logo} height="300 em" className="logo" alt="A Neutered Fruit text logo" /></div>
             <p>... a lot will happen but it feels seemless. One moment it will be like funky prog, next it's computer game meets metal and it somehow works.</p>
             <div className="hero__buttons">
-            <a href="#contact"><button className="btn">Contact</button></a>
+                <a href="#contact"><button className="btn">Contact</button></a>
                 <button className="btn">Download</button>
             </div>
         </div>
@@ -156,36 +177,42 @@ export const SoundStyle: React.FC = () => (
 export const Gallery: React.FC = () => {
     const [activeImage, setActiveImage] = useState<string | null>(null);
 
-    const images = ["/img1.jpg", "/img2.jpg", "/img3.jpg"];
+    const images = [livePerformance, videoSnap, mainlogo];
 
     return (
         <section id="media" className="gallery">
             <h2>Gallery</h2>
             <div className="gallery__grid">
-                {images.map((src) => (
+                {images.map(src => (
                     <img
                         key={src}
                         src={src}
-                        onClick={() => setActiveImage(src)}
                         className="gallery__thumb"
+                        onClick={() => setActiveImage(src)}
+                        loading="lazy"
                     />
                 ))}
             </div>
 
             {activeImage && (
                 <div className="image-viewer">
+                    <button
+                        className="image-viewer__close"
+                        onClick={() => setActiveImage(null)}
+                        aria-label="Close image"
+                    >
+                        ✕
+                    </button>
+
                     <img src={activeImage} alt="Expanded" />
+
                     <div className="image-viewer__actions">
-                        <a href={activeImage} download>
-                            Download HD
-                        </a>
-                        <a href={activeImage} download>
-                            Download SD
-                        </a>
-                        <button onClick={() => setActiveImage(null)}>Close</button>
+                        <a href={activeImage} download>Download HD</a>
+                        <a href={activeImage} download>Download SD</a>
                     </div>
                 </div>
             )}
+
         </section>
     );
 };
@@ -220,8 +247,8 @@ export const Footer: React.FC = () => (
         <div className="footer__logo">          <img src={peach} className="peach" alt="A Neutered Fruit Peach logo" />
         </div>
         <div className="footer__social">
-            <a href="https://www.instagram.com/a_neutered_fruit/"><img src={instagram} className="social-icon" alt="Instagram" /></a>
-            <a href="https://aneuteredfruit.bandcamp.com/album/we-dont-get-out-much"><img src={bandcamp} className="social-icon" alt="Bandcamp" /></a>
+            <a href="https://www.instagram.com/a_neutered_fruit/"><img src={instagram} className="social-icon" alt="Instagram" width="60" height="60" /></a>
+            <a href="https://aneuteredfruit.bandcamp.com/album/we-dont-get-out-much"><img src={bandcamp} className="social-icon" alt="Bandcamp" width="60" height="60" /></a>
         </div>
     </footer>
 );
