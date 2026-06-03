@@ -8,6 +8,8 @@ import videoSnap from "../assets/music-video-snap.png";
 import livePerformance from "../assets/live-photo.jpeg";
 import mainlogo from "../assets/logo.png";
 
+import Map from "./map";
+
 /* =====================
    HEADER
 ===================== */
@@ -222,10 +224,33 @@ export const Gallery: React.FC = () => {
 ===================== */
 export const VideoSection: React.FC = () => (
     <section className="video">
-        <h2>Video</h2>
-        <video controls className="video__player">
-            <source src="/video.mp4" type="video/mp4" />
-        </video>
+        <h2>Videos</h2>
+
+        <div className="video__row">
+            <div className="video__group">
+                <h3>Music Video</h3>
+                <div className="video__embed">
+                    <iframe
+                        src="https://www.youtube.com/embed/fls4XWgIFOQ"
+                        title="Music Video"
+                        allowFullScreen
+                    />
+                </div>
+            </div>
+
+
+            <div className="video__group">
+                <h3>Live Performance</h3>
+                <div className="video__embed">
+                    <iframe
+                        src="https://www.youtube.com/embed/qXgKf-SQpQI"
+                        title="Live Performance"
+                        allowFullScreen
+                    />
+                </div>
+            </div>
+        </div>
+
     </section>
 );
 
@@ -269,8 +294,10 @@ export const Page: React.FC = () => (
         <SoundStyle />
         <hr className='divider' />
         <Gallery />
-        {/* <hr className='divider' /> */}
-        {/* <VideoSection /> */}
+        <hr className='divider' />
+        <VideoSection />
+        <hr className='divider' />
+        <Map />
         <hr className='divider' />
         <Contacts />
         <hr className='divider' />

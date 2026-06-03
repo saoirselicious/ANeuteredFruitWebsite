@@ -2,16 +2,67 @@
    ROOT VARIABLES
 ===================== */
 :root {
+  /* Fonts */
   --font-logo: 'Throrian Commonface', serif;
   --font-heading: 'Bebas Neue', sans-serif;
   --font-body: 'Space Grotesk', sans-serif;
 
+  /* Colours */
   --background-color: #e6dfd6;
   --primary-color: #ce8e85;
   --secondary-color: #4f5c43;
   --text-color: #333333;
 
-  --section-max-width: 900px;
+  /* Layout */
+  --section-max-width: 80vw;
+  --video-max-width: 800px;
+  --mobile-breakpoint: 768px;
+
+  /* Spacing */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+  --space-xl: 4rem;
+
+  /* Sizes */
+  --logo-size: 12rem;
+  --icon-size: 40px;
+  --nav-offset-top: 120px;
+
+  /* Typography */
+  --section-heading-size: 2rem;
+  --body-size: 1.1rem;
+  --button-font-size: 16px;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-pill: 42px;
+
+  /* Borders */
+  --border-width: 2px;
+  --divider-height: 2px;
+  --divider-light: 1px;
+
+  /* Shadows */
+  --button-ring-size: 2px;
+
+  /* Gallery */
+  --gallery-columns: 3;
+  --gallery-columns-mobile: 2;
+  --gallery-gap: 1.25rem;
+
+  /* Video */
+  --video-ratio: 56.25%;
+  --video-height: 200px;
+  --video-gap: 2rem;
+
+  /* Overlay */
+  --overlay-bg: rgba(0, 0, 0, 0.85);
+  --z-modal: 1000;
+
+  /* Animation */
+  --transition-fast: 0.2s ease;
 }
 
 /* =====================
@@ -25,7 +76,6 @@
 
 body {
   margin: 0;
-  padding: 2rem;
   font-family: var(--font-body);
   font-size: 1.1rem;
   color: var(--text-color);
@@ -62,8 +112,8 @@ a {
 
 .header__logo,
 .footer__logo {
-  width: 40px;
-  height: 40px;
+  width: var(--icon-size);
+  height: var(--icon-size);
 }
 
 .header__nav a,
@@ -90,13 +140,12 @@ a {
 
   .header__nav {
     position: absolute;
-    top: 120px;
+    top: var(--nav-offset-top);
     right: 0px;
     background-color: var(--secondary-color);
     flex-direction: column;
     width: 100%;
     display: none;
-    padding: 1rem;
     color: var(--background-color)
   }
 
@@ -120,14 +169,14 @@ a {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
-  padding: 4rem 2rem;
+  padding: 1rem 2rem;
   align-items: center;
 }
 
 .logo {
-  height: 12rem;
+  height: var(--logo-size);
   max-width: 100%;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .hero__image img {
@@ -156,7 +205,7 @@ a {
   }
 
   .logo {
-    height: 9rem;
+    height: var(--logo-size) * 0.75;
     margin: 0 auto 1rem;
   }
 
@@ -170,15 +219,11 @@ a {
 /* =====================
    SHARED SECTION STYLES
 ===================== */
-.bio,
-.sound,
-.video,
-.overview,
-.contacts,
-.gallery {
+
+section {
   max-width: var(--section-max-width);
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0.5rem;
 }
 
 .bio h2,
@@ -188,7 +233,7 @@ a {
 .contacts h2,
 .gallery h2 {
   font-family: var(--font-heading);
-  font-size: 2.5rem;
+  font-size: var(--section-heading-size);
   margin-bottom: 1rem;
 }
 
@@ -282,9 +327,42 @@ a {
 /* =====================
    VIDEO
 ===================== */
-.video__player {
+.video {
   width: 100%;
-  max-width: 800px;
+  margin: 0 auto;
+}
+
+.video__row {
+  display: flex;
+  gap: 2rem;
+}
+
+.video__group {
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .video__row {
+    flex-direction: column;
+  }
+}
+
+.video__embed {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 200px;
+}
+
+.video__embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.video h3 {
+  margin-bottom: 1rem;
 }
 
 /* =====================
@@ -307,7 +385,7 @@ a {
 .divider {
   height: 2px;
   background-color: var(--secondary-color);
-  margin: 2rem 0;
+  margin: 0.5rem 0;
 }
 
 /* =====================
