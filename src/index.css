@@ -223,19 +223,16 @@ a {
 section {
   max-width: var(--section-max-width);
   margin: 0 auto;
-  padding: 0.5rem;
 }
 
-.bio h2,
-.sound h2,
-.video h2,
-.overview h2,
-.contacts h2,
-.gallery h2 {
+h3 {
   font-family: var(--font-heading);
   font-size: var(--section-heading-size);
-  margin-bottom: 1rem;
+  margin-bottom: 0;
+  margin-top: 0;
 }
+
+
 
 /* =====================
    OVERVIEW
@@ -385,7 +382,7 @@ section {
 .divider {
   height: 2px;
   background-color: var(--secondary-color);
-  margin: 0.5rem 0;
+  margin: 1.5rem 0 1rem 0;
 }
 
 /* =====================
@@ -393,7 +390,6 @@ section {
 ===================== */
 details {
   border-bottom: 1px solid var(--secondary-color);
-  padding-bottom: 0.5rem;
 }
 
 details summary {

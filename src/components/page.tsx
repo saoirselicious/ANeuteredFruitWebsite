@@ -66,7 +66,7 @@ export const Hero: React.FC = () => (
 ===================== */
 export const Overview: React.FC = () => (
     <section id="overview" className="overview">
-        <h2>Overview</h2>
+        <h3>Overview</h3>
 
         <div className="overview_content">
 
@@ -99,7 +99,7 @@ export const Biography: React.FC = () => {
 
     return (
         <section id="bio" className="bio">
-            <h2>Biography</h2>
+            <h3>Biography</h3>
             <p>
                 {expanded
                     ? <>An instrumental progressive rock duo from Dublin, Ireland. They aspire for an expansive, high-energy sound that blends ideas from a bunch of different worlds. The duo first met in 2016 through UCD’s Jazz Society, bonding over their shared love of an ecclectic mix of music. Performing together college events for the Jazz Society they began to explore musically ideas. <br /> <br />
@@ -120,7 +120,7 @@ export const Biography: React.FC = () => {
 ===================== */
 export const SoundStyle: React.FC = () => (
     <section className="sound">
-        <h2>Sound & Style</h2>
+        <h3>Sound & Style</h3>
         <p>We often say that the only thing that defines if an idea will make it, is if during the jam it makes us laugh.</p>
 
 
@@ -183,7 +183,7 @@ export const Gallery: React.FC = () => {
 
     return (
         <section id="media" className="gallery">
-            <h2>Gallery</h2>
+            <h3>Gallery</h3>
             <div className="gallery__grid">
                 {images.map(src => (
                     <img
@@ -224,11 +224,11 @@ export const Gallery: React.FC = () => {
 ===================== */
 export const VideoSection: React.FC = () => (
     <section className="video">
-        <h2>Videos</h2>
+        <h3>Videos</h3>
 
         <div className="video__row">
             <div className="video__group">
-                <h3>Music Video</h3>
+                <h4>Music Video</h4>
                 <div className="video__embed">
                     <iframe
                         src="https://www.youtube.com/embed/fls4XWgIFOQ"
@@ -240,7 +240,7 @@ export const VideoSection: React.FC = () => (
 
 
             <div className="video__group">
-                <h3>Live Performance</h3>
+                <h4>Live Performance</h4>
                 <div className="video__embed">
                     <iframe
                         src="https://www.youtube.com/embed/qXgKf-SQpQI"
@@ -259,7 +259,7 @@ export const VideoSection: React.FC = () => (
 ===================== */
 export const Contacts: React.FC = () => (
     <section id="contact" className="contacts">
-        <h2>Contact</h2>
+        <h3>Contact</h3>
         <p>Email: aneuteredfruit@gmail.com</p>
     </section>
 );
