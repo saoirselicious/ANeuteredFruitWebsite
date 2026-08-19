@@ -7,6 +7,8 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import Swal from "sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css";
 import "../index.css";
 
 import {
@@ -17,6 +19,7 @@ import {
 } from "@tanstack/react-table";
 
 import { getShows } from "../sanityQueries";
+import { urlFor, type SanityImageSource } from "../sanityImage";
 
 /* =====================
    TYPES
@@ -27,25 +30,26 @@ type Show = {
     date: string;
     venue: string;
     city: string;
+    poster?: SanityImageSource;
+    otherBands?: string[];
+    promoter?: string;
     description?: string;
-    time?: string;
     ticketUrl?: string;
     published?: boolean;
-    latitude?: number | null;
-    longitude?: number | null;
+    time?: string;
+    latitude: number;
+    longitude: number;
 };
 
 /* =====================
-   MAP ICONS
+   ICONS
 ===================== */
 
 const defaultIcon = new L.Icon({
     iconUrl:
         "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-
     shadowUrl:
         "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-
     iconSize: [25, 41],
     iconAnchor: [12, 41],
 });
@@ -53,16 +57,14 @@ const defaultIcon = new L.Icon({
 const highlightedIcon = new L.Icon({
     iconUrl:
         "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-
     shadowUrl:
         "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-
     iconSize: [30, 49],
     iconAnchor: [15, 49],
 });
 
 /* =====================
-   DATE FORMATTER
+   DATE
 ===================== */
 
 const formatDate = (date: string) => {
@@ -71,17 +73,64 @@ const formatDate = (date: string) => {
     return parsedDate.toLocaleDateString("en-IE", {
         day: "numeric",
         month: "short",
+        year: "numeric",
     });
 };
 
 /* =====================
-   MAP
+   COMPONENT
 ===================== */
 
 export default function VenueMap() {
     const [shows, setShows] = useState<Show[]>([]);
-    const [hoveredShow, setHoveredShow] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const [activeTab, setActiveTab] =
+        useState<"shows" | "map">("shows");
+
+    const [selectedShow, setSelectedShow] =
+        useState<Show | null>(null);
+
+    const [hoveredShow, setHoveredShow] =
+        useState<string | null>(null);
+
+    const [posterOpen, setPosterOpen] =
+        useState(false);
+    const [showsCategory, setShowsCategory] =
+        useState<"upcoming" | "past">("upcoming");
+
+    const showDetailsModal = (show: Show) => {
+        const posterUrl = show.poster
+            ? urlFor(show.poster).width(800).quality(90).url()
+            : null;
+
+        const htmlParts: string[] = [];
+
+        htmlParts.push(`<div><strong>${show.venue}</strong></div>`);
+        htmlParts.push(`<div>${show.city}</div>`);
+        htmlParts.push(`<div>${formatDate(show.date)}</div>`);
+        if (show.time) htmlParts.push(`<div>${show.time}</div>`);
+        if (show.description)
+            htmlParts.push(`<div style="margin-top:8px">${show.description}</div>`);
+        if (show.ticketUrl)
+            htmlParts.push(`<div style="margin-top:8px"><a href=\"${show.ticketUrl}\" target=\"_blank\">Tickets</a></div>`);
+        if (posterUrl)
+            htmlParts.push(`<div style="margin-top:12px"><img src=\"${posterUrl}\" style=\"max-width:100%;height:auto;\"/></div>`);
+
+        Swal.fire({
+            title: show.venue,
+            html: htmlParts.join(""),
+            showCloseButton: true,
+            showCancelButton: true,
+            confirmButtonText: "Open Details",
+            cancelButtonText: "Close",
+            width: "680px",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                setSelectedShow(show);
+            }
+        });
+    };
 
     /* =====================
        LOAD SHOWS
@@ -101,7 +150,7 @@ export default function VenueMap() {
     }, []);
 
     /* =====================
-       TABLE COLUMNS
+       TABLE
     ===================== */
 
     const columns = useMemo<ColumnDef<Show>[]>(
@@ -122,18 +171,26 @@ export default function VenueMap() {
         []
     );
 
-    /* =====================
-       TABLE
-    ===================== */
+    const filteredShows = useMemo(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        return shows.filter((s) => {
+            const parsed = new Date(`${s.date}T12:00:00`);
+            const isUpcoming = parsed.getTime() > today.getTime();
+
+            return showsCategory === "upcoming" ? isUpcoming : !isUpcoming;
+        });
+    }, [shows, showsCategory]);
 
     const table = useReactTable({
-        data: shows,
+        data: filteredShows,
         columns,
         getCoreRowModel: getCoreRowModel(),
     });
 
     /* =====================
-       LOADING STATE
+       LOADING
     ===================== */
 
     if (loading) {
@@ -153,122 +210,315 @@ export default function VenueMap() {
         <section className="map">
             <h2>Gigs</h2>
 
-            {shows.length === 0 ? (
-                <p>No upcoming gigs.</p>
-            ) : (
-                <div
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "400px 1fr",
-                        gap: 16,
-                        height: 600,
-                    }}
+            {/* TABS */}
+
+            <div className="gig-tabs">
+                <button
+                    className={`btn ${
+                        activeTab === "shows"
+                            ? "gig-tabs__active"
+                            : ""
+                    }`}
+                    onClick={() => setActiveTab("shows")}
                 >
+                    Show List
+                </button>
 
-                    {/* =====================
-                        TABLE
-                    ===================== */}
+                <button
+                    className={`btn ${
+                        activeTab === "map"
+                            ? "gig-tabs__active"
+                            : ""
+                    }`}
+                    onClick={() => setActiveTab("map")}
+                >
+                    Map
+                </button>
+            </div>
 
-                    <div
-                        style={{
-                            border: "1px solid #ddd",
-                            borderRadius: 8,
-                            overflow: "hidden",
-                        }}
-                    >
-                        <table
+            {/* =====================
+                SHOW LIST
+            ===================== */}
+
+            {activeTab === "shows" && (
+                <div className="gig-list">
+
+                    <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                        <button
+                            className={`btn ${showsCategory === "upcoming" ? "gig-tabs__active" : ""}`}
+                            onClick={() => setShowsCategory("upcoming")}
+                        >
+                            Upcoming
+                        </button>
+
+                        <button
+                            className={`btn ${showsCategory === "past" ? "gig-tabs__active" : ""}`}
+                            onClick={() => setShowsCategory("past")}
+                        >
+                            Past
+                        </button>
+                    </div>
+
+                    {filteredShows.length === 0 && (
+                        <p>No {showsCategory === "upcoming" ? "upcoming" : "past"} gigs.</p>
+                    )}
+
+                    {filteredShows.length > 0 && (
+                        <div
                             style={{
-                                width: "100%",
-                                borderCollapse: "collapse",
+                                border: "1px solid #ddd",
+                                borderRadius: 8,
+                                overflow: "hidden",
                             }}
                         >
-                            <thead>
-                                {table
-                                    .getHeaderGroups()
-                                    .map((headerGroup) => (
-                                        <tr key={headerGroup.id}>
-                                            {headerGroup.headers.map(
-                                                (header) => (
-                                                    <th
-                                                        key={header.id}
-                                                        style={{
-                                                            textAlign:
-                                                                "left",
-                                                            padding: 12,
-                                                            borderBottom:
-                                                                "1px solid #ddd",
-                                                        }}
-                                                    >
-                                                        {flexRender(
-                                                            header.column
-                                                                .columnDef
-                                                                .header,
-                                                            header.getContext()
-                                                        )}
-                                                    </th>
-                                                )
-                                            )}
-                                        </tr>
-                                    ))}
-                            </thead>
-
-                            <tbody>
-                                {table
-                                    .getRowModel()
-                                    .rows.map((row) => {
-                                        const show = row.original;
-
-                                        return (
+                            <table
+                                style={{
+                                    width: "100%",
+                                    borderCollapse: "collapse",
+                                }}
+                            >
+                                <thead>
+                                    {table
+                                        .getHeaderGroups()
+                                        .map((headerGroup) => (
                                             <tr
-                                                key={show._id}
-                                                onMouseEnter={() =>
-                                                    setHoveredShow(
-                                                        show._id
-                                                    )
-                                                }
-                                                onMouseLeave={() =>
-                                                    setHoveredShow(null)
-                                                }
-                                                style={{
-                                                    cursor: "pointer",
-
-                                                    background:
-                                                        hoveredShow ===
-                                                            show._id
-                                                            ? "#f5f5f5"
-                                                            : "transparent",
-                                                }}
+                                                key={headerGroup.id}
                                             >
-                                                {row
-                                                    .getVisibleCells()
-                                                    .map((cell) => (
-                                                        <td
-                                                            key={cell.id}
+                                                {headerGroup.headers.map(
+                                                    (header) => (
+                                                        <th
+                                                            key={header.id}
                                                             style={{
+                                                                textAlign:
+                                                                    "left",
                                                                 padding: 12,
                                                                 borderBottom:
-                                                                    "1px solid #eee",
+                                                                    "1px solid #ddd",
                                                             }}
                                                         >
                                                             {flexRender(
-                                                                cell.column
+                                                                header
+                                                                    .column
                                                                     .columnDef
-                                                                    .cell,
-                                                                cell.getContext()
+                                                                    .header,
+                                                                header.getContext()
                                                             )}
-                                                        </td>
-                                                    ))}
+                                                        </th>
+                                                    )
+                                                )}
                                             </tr>
-                                        );
-                                    })}
-                            </tbody>
-                        </table>
-                    </div>
+                                        ))}
+                                </thead>
 
-                    {/* =====================
-                        MAP
-                    ===================== */}
+                                <tbody>
+                                    {table
+                                        .getRowModel()
+                                        .rows.map((row) => {
+                                            const show =
+                                                row.original;
 
+                                            return (
+                                                <tr
+                                                    key={show._id}
+                                                    onMouseEnter={() =>
+                                                        setHoveredShow(
+                                                            show._id
+                                                        )
+                                                    }
+                                                    onMouseLeave={() =>
+                                                        setHoveredShow(
+                                                            null
+                                                        )
+                                                    }
+                                                    onClick={() =>
+                                                        showDetailsModal(
+                                                            show
+                                                        )
+                                                    }
+                                                    style={{
+                                                        cursor:
+                                                            "pointer",
+                                                        background:
+                                                            hoveredShow ===
+                                                            show._id
+                                                                ? "#f5f5f5"
+                                                                : "transparent",
+                                                    }}
+                                                >
+                                                    {row
+                                                        .getVisibleCells()
+                                                        .map(
+                                                            (
+                                                                cell
+                                                            ) => (
+                                                                <td
+                                                                    key={
+                                                                        cell.id
+                                                                    }
+                                                                    style={{
+                                                                        padding: 12,
+                                                                        borderBottom:
+                                                                            "1px solid #eee",
+                                                                    }}
+                                                                >
+                                                                    {flexRender(
+                                                                        cell
+                                                                            .column
+                                                                            .columnDef
+                                                                            .cell,
+                                                                        cell.getContext()
+                                                                    )}
+                                                                </td>
+                                                            )
+                                                        )}
+                                                </tr>
+                                            );
+                                        })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+
+                    {/* SELECTED SHOW */}
+
+                    {selectedShow && (
+                        <div className="gig-details">
+
+                            <button
+                                className="gig-details__close"
+                                onClick={() =>
+                                    setSelectedShow(null)
+                                }
+                                aria-label="Close gig details"
+                            >
+                                ✕
+                            </button>
+
+                            <div className="gig-details__content">
+
+                                <div className="gig-details__info">
+                                    <h3>
+                                        {selectedShow.venue}
+                                    </h3>
+
+                                    <p>
+                                        <strong>
+                                            {formatDate(
+                                                selectedShow.date
+                                            )}
+                                        </strong>
+                                    </p>
+
+                                    <p>
+                                        {selectedShow.city}
+                                    </p>
+
+                                    {selectedShow.description && (
+                                        <p>
+                                            {
+                                                selectedShow.description
+                                            }
+                                        </p>
+                                    )}
+
+                                    {selectedShow.otherBands &&
+                                        selectedShow.otherBands
+                                            .length > 0 && (
+                                            <div>
+                                                <h4>
+                                                    Also playing
+                                                </h4>
+
+                                                <ul>
+                                                    {selectedShow.otherBands.map(
+                                                        (
+                                                            band,
+                                                            index
+                                                        ) => (
+                                                            <li
+                                                                key={`${band}-${index}`}
+                                                            >
+                                                                {band}
+                                                            </li>
+                                                        )
+                                                    )}
+                                                </ul>
+                                            </div>
+                                        )}
+
+                                    {selectedShow.promoter && (
+                                        <p>
+                                            <strong>
+                                                Presented by:
+                                            </strong>{" "}
+                                            {
+                                                selectedShow.promoter
+                                            }
+                                        </p>
+                                    )}
+
+                                    {selectedShow.ticketUrl && (
+                                        <a
+                                            href={
+                                                selectedShow.ticketUrl
+                                            }
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="btn"
+                                        >
+                                            Tickets
+                                        </a>
+                                    )}
+
+                                    {selectedShow.poster && (
+                                        <button
+                                            className="btn"
+                                            onClick={() =>
+                                                setPosterOpen(
+                                                    true
+                                                )
+                                            }
+                                        >
+                                            View Poster
+                                        </button>
+                                    )}
+                                </div>
+
+                                {selectedShow.poster && (
+                                    <div className="gig-details__poster">
+                                        <img
+                                            src={urlFor(
+                                                selectedShow.poster
+                                            )
+                                                .width(800)
+                                                .quality(90)
+                                                .url()}
+                                            alt={`${selectedShow.venue} poster`}
+                                            onClick={() =>
+                                                setPosterOpen(
+                                                    true
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* =====================
+                MAP
+            ===================== */}
+
+            {activeTab === "map" && (
+                <div
+                    style={{
+                        height: 600,
+                        width: "100%",
+                    }}
+                >
                     <MapContainer
                         center={[53.4494762, -7.5029786]}
                         zoom={7}
@@ -282,15 +532,7 @@ export default function VenueMap() {
                             attribution="&copy; OpenStreetMap contributors"
                         />
 
-                        {shows
-                            .filter(
-                                (s) =>
-                                    typeof s.latitude === "number" &&
-                                    typeof s.longitude === "number" &&
-                                    Number.isFinite(s.latitude) &&
-                                    Number.isFinite(s.longitude)
-                            )
-                            .map((show) => (
+                        {shows.map((show) => (
                             <Marker
                                 key={show._id}
                                 position={[
@@ -302,9 +544,17 @@ export default function VenueMap() {
                                         ? highlightedIcon
                                         : defaultIcon
                                 }
+                                eventHandlers={{
+                                    click: () => {
+                                        setSelectedShow(show);
+                                        setActiveTab("shows");
+                                    },
+                                }}
                             >
                                 <Popup>
-                                    <strong>{show.venue}</strong>
+                                    <strong>
+                                        {show.venue}
+                                    </strong>
 
                                     <br />
 
@@ -313,41 +563,49 @@ export default function VenueMap() {
                                     <br />
 
                                     {formatDate(show.date)}
-
-                                    {show.time && (
-                                        <>
-                                            <br />
-                                            {show.time}
-                                        </>
-                                    )}
-
-                                    {show.description && (
-                                        <>
-                                            <br />
-                                            <br />
-                                            {show.description}
-                                        </>
-                                    )}
-
-                                    {show.ticketUrl && (
-                                        <>
-                                            <br />
-                                            <br />
-                                            <a
-                                                href={show.ticketUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                Tickets
-                                            </a>
-                                        </>
-                                    )}
                                 </Popup>
                             </Marker>
                         ))}
                     </MapContainer>
                 </div>
             )}
+
+            {/* =====================
+                POSTER LIGHTBOX
+            ===================== */}
+
+            {posterOpen &&
+                selectedShow?.poster && (
+                    <div
+                        className="image-viewer"
+                        onClick={() =>
+                            setPosterOpen(false)
+                        }
+                    >
+                        <button
+                            className="image-viewer__close"
+                            onClick={() =>
+                                setPosterOpen(false)
+                            }
+                            aria-label="Close poster"
+                        >
+                            ✕
+                        </button>
+
+                        <img
+                            src={urlFor(
+                                selectedShow.poster
+                            )
+                                .width(2000)
+                                .quality(95)
+                                .url()}
+                            alt={`${selectedShow.venue} poster`}
+                            onClick={(event) =>
+                                event.stopPropagation()
+                            }
+                        />
+                    </div>
+                )}
         </section>
     );
 }

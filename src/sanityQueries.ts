@@ -1,4 +1,4 @@
-import { sanityClient } from './sanity'
+import { sanityClient } from "./sanity";
 
 export const getShows = async () => {
     return sanityClient.fetch(`
@@ -8,8 +8,10 @@ export const getShows = async () => {
             date,
             venue,
             city,
+            poster,
+            otherBands,
+            promoter,
             description,
-            time,
             ticketUrl,
             published,
             latitude,
@@ -20,14 +22,27 @@ export const getShows = async () => {
 
 export const getPhotos = async () => {
     return sanityClient.fetch(`
-    *[_type == "photo"]
-    | order(sortOrder asc)
-  `)
-}
+        *[_type == "photo"]
+        | order(sortOrder asc) {
+            _id,
+            image,
+            caption,
+            category,
+            sortOrder
+        }
+    `);
+};
 
 export const getVideos = async () => {
     return sanityClient.fetch(`
-    *[_type == "video"]
-    | order(sortOrder asc)
-  `)
-}
+        *[_type == "video"]
+        | order(sortOrder asc) {
+            _id,
+            title,
+            youtubeUrl,
+            category,
+            description,
+            sortOrder
+        }
+    `);
+};

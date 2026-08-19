@@ -142,7 +142,6 @@ export const Overview: React.FC = () => (
         <h3>Overview</h3>
 
         <div className="overview_content">
-
             <div className="overview__column">
                 <h3>Location</h3>
                 <p>Dublin, Ireland</p>
@@ -151,21 +150,22 @@ export const Overview: React.FC = () => (
             <div className="overview__column">
                 <h3>Releases</h3>
 
-                <ul>
+                <div className="bandcamp-player">
                     <iframe
                         style={{
                             border: 0,
-                            width: "100%",
-                            height: "42px",
+                            width: "350px",
+                            height: "654px",
                         }}
-                        src="https://bandcamp.com/EmbeddedPlayer/album=325852699/size=small/bgcol=333333/linkcol=0f91ff/transparent=true/"
+                        src="https://bandcamp.com/EmbeddedPlayer/album=325852699/size=large/bgcol=ffffff/linkcol=0687f5/transparent=true/"
                         seamless
                     >
                         <a href="https://aneuteredfruit.bandcamp.com/album/we-dont-get-out-much">
-                            We Don't Get Out Much by a neutered fruit
+                            We Don't Get Out Much by a
+                            neutered fruit
                         </a>
                     </iframe>
-                </ul>
+                </div>
             </div>
         </div>
     </section>
@@ -279,8 +279,14 @@ export const SoundStyle: React.FC = () => (
 
 export const Gallery: React.FC = () => {
     const [photos, setPhotos] = useState<Photo[]>([]);
-    const [activeImage, setActiveImage] = useState<Photo | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [activeImage, setActiveImage] =
+        useState<Photo | null>(null);
+
+    const [activeCategory, setActiveCategory] =
+        useState("all");
+
+    const [loading, setLoading] =
+        useState(true);
 
     useEffect(() => {
         getPhotos()
@@ -288,70 +294,158 @@ export const Gallery: React.FC = () => {
                 setPhotos(data);
             })
             .catch((error) => {
-                console.error("Failed to load photos:", error);
+                console.error(
+                    "Failed to load photos:",
+                    error
+                );
             })
             .finally(() => {
                 setLoading(false);
             });
     }, []);
 
+    const categories = [
+        { label: "All", value: "all" },
+        { label: "Live", value: "live" },
+        {
+            label: "Promo / Marketing",
+            value: "promo",
+        },
+        {
+            label: "Band",
+            value: "band",
+        },
+        {
+            label: "Logo / Branding",
+            value: "branding",
+        },
+        {
+            label: "Other",
+            value: "other",
+        },
+    ];
+
+    const filteredPhotos =
+        activeCategory === "all"
+            ? photos
+            : photos.filter(
+                (photo) =>
+                    photo.category ===
+                    activeCategory
+            );
+
     return (
         <section id="media" className="gallery">
-            <h3>Gallery</h3>
+            <h3>Photos</h3>
 
-            {loading && <p>Loading gallery...</p>}
+            {/* CATEGORY TABS */}
 
-            {!loading && photos.length === 0 && (
-                <p>No photos available.</p>
+            <div className="media-tabs">
+                {categories.map((category) => (
+                    <button
+                        key={category.value}
+                        className={`btn ${activeCategory ===
+                                category.value
+                                ? "media-tabs__active"
+                                : ""
+                            }`}
+                        onClick={() =>
+                            setActiveCategory(
+                                category.value
+                            )
+                        }
+                    >
+                        {category.label}
+                    </button>
+                ))}
+            </div>
+
+            {loading && (
+                <p>Loading gallery...</p>
             )}
 
+            {!loading &&
+                filteredPhotos.length === 0 && (
+                    <p>
+                        No photos in this category.
+                    </p>
+                )}
+
             <div className="gallery__grid">
-                {photos.map((photo) => (
+                {filteredPhotos.map((photo) => (
                     <img
                         key={photo._id}
                         src={urlFor(photo.image)
                             .width(1000)
                             .quality(85)
                             .url()}
-                        alt={photo.caption || "A Neutered Fruit"}
+                        alt={
+                            photo.caption ||
+                            "A Neutered Fruit"
+                        }
                         className="gallery__thumb"
-                        onClick={() => setActiveImage(photo)}
+                        onClick={() =>
+                            setActiveImage(photo)
+                        }
                         loading="lazy"
                     />
                 ))}
             </div>
 
-            {activeImage && (
-                <div className="image-viewer">
+            {/* IMAGE VIEWER */}
 
+            {activeImage && (
+                <div
+                    className="image-viewer"
+                    onClick={() =>
+                        setActiveImage(null)
+                    }
+                >
                     <button
                         className="image-viewer__close"
-                        onClick={() => setActiveImage(null)}
+                        onClick={() =>
+                            setActiveImage(null)
+                        }
                         aria-label="Close image"
                     >
                         ✕
                     </button>
 
                     <img
-                        src={urlFor(activeImage.image)
+                        src={urlFor(
+                            activeImage.image
+                        )
                             .width(2000)
                             .quality(90)
                             .url()}
-                        alt={activeImage.caption || "A Neutered Fruit"}
+                        alt={
+                            activeImage.caption ||
+                            "A Neutered Fruit"
+                        }
+                        onClick={(event) =>
+                            event.stopPropagation()
+                        }
                     />
 
                     {activeImage.caption && (
-                        <p>{activeImage.caption}</p>
+                        <p>
+                            {activeImage.caption}
+                        </p>
                     )}
 
                     <div className="image-viewer__actions">
                         <a
-                            href={urlFor(activeImage.image)
+                            href={urlFor(
+                                activeImage.image
+                            )
                                 .width(2000)
                                 .quality(95)
                                 .url()}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={(event) =>
+                                event.stopPropagation()
+                            }
                         >
                             Open HD
                         </a>
@@ -367,8 +461,14 @@ export const Gallery: React.FC = () => {
 ===================== */
 
 export const VideoSection: React.FC = () => {
-    const [videos, setVideos] = useState<Video[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [videos, setVideos] =
+        useState<Video[]>([]);
+
+    const [activeCategory, setActiveCategory] =
+        useState("all");
+
+    const [loading, setLoading] =
+        useState(true);
 
     useEffect(() => {
         getVideos()
@@ -376,25 +476,83 @@ export const VideoSection: React.FC = () => {
                 setVideos(data);
             })
             .catch((error) => {
-                console.error("Failed to load videos:", error);
+                console.error(
+                    "Failed to load videos:",
+                    error
+                );
             })
             .finally(() => {
                 setLoading(false);
             });
     }, []);
 
+    const categories = [
+        {
+            label: "All",
+            value: "all",
+        },
+        {
+            label: "Music Videos",
+            value: "music-video",
+        },
+        {
+            label: "Live",
+            value: "live",
+        },
+        {
+            label: "Other",
+            value: "other",
+        },
+    ];
+
+    const filteredVideos =
+        activeCategory === "all"
+            ? videos
+            : videos.filter(
+                (video) =>
+                    video.category ===
+                    activeCategory
+            );
+
     return (
         <section className="video">
             <h3>Videos</h3>
 
-            {loading && <p>Loading videos...</p>}
+            {/* CATEGORY TABS */}
 
-            {!loading && videos.length === 0 && (
-                <p>No videos available.</p>
+            <div className="media-tabs">
+                {categories.map((category) => (
+                    <button
+                        key={category.value}
+                        className={`btn ${activeCategory ===
+                            category.value
+                            ? "media-tabs__active"
+                            : ""
+                            }`}
+                        onClick={() =>
+                            setActiveCategory(
+                                category.value
+                            )
+                        }
+                    >
+                        {category.label}
+                    </button>
+                ))}
+            </div>
+
+            {loading && (
+                <p>Loading videos...</p>
             )}
 
+            {!loading &&
+                filteredVideos.length === 0 && (
+                    <p>
+                        No videos in this category.
+                    </p>
+                )}
+
             <div className="video__row">
-                {videos.map((video) => (
+                {filteredVideos.map((video) => (
                     <div
                         className="video__group"
                         key={video._id}
@@ -403,14 +561,18 @@ export const VideoSection: React.FC = () => {
 
                         <div className="video__embed">
                             <iframe
-                                src={getYouTubeEmbedUrl(video.youtubeUrl)}
+                                src={getYouTubeEmbedUrl(
+                                    video.youtubeUrl
+                                )}
                                 title={video.title}
                                 allowFullScreen
                             />
                         </div>
 
                         {video.description && (
-                            <p>{video.description}</p>
+                            <p>
+                                {video.description}
+                            </p>
                         )}
                     </div>
                 ))}
