@@ -1,24 +1,78 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+
 import peach from "../assets/peach.png";
 import logo from "../assets/type.png";
 import hero from "../assets/hero-smaller.jpg";
 import bandcamp from "../assets/bandcamp.png";
 import instagram from "../assets/instagram.png";
-import videoSnap from "../assets/music-video-snap.png";
-import livePerformance from "../assets/live-photo.jpeg";
-import mainlogo from "../assets/logo.png";
 
 import Map from "./map";
+
+import { getPhotos, getVideos } from "../sanityQueries";
+import { urlFor, type SanityImageSource } from "../sanityImage";
+
+/* =====================
+   TYPES
+===================== */
+
+type Photo = {
+    _id: string;
+    image: SanityImageSource;
+    caption?: string;
+    category?: string;
+    featured?: boolean;
+    sortOrder?: number;
+};
+
+type Video = {
+    _id: string;
+    title: string;
+    youtubeUrl: string;
+    category?: string;
+    description?: string;
+    sortOrder?: number;
+};
+
+const getYouTubeEmbedUrl = (url: string): string => {
+    try {
+        const parsed = new URL(url);
+
+        // Already an embed URL
+        if (parsed.hostname.includes("youtube.com") && parsed.pathname.startsWith("/embed/")) {
+            return url;
+        }
+
+        // Normal youtube.com/watch?v=...
+        if (parsed.hostname.includes("youtube.com")) {
+            const videoId = parsed.searchParams.get("v");
+
+            if (videoId) {
+                return `https://www.youtube.com/embed/${videoId}`;
+            }
+        }
+
+        if (parsed.hostname === "youtu.be") {
+            const videoId = parsed.pathname.replace("/", "");
+
+            if (videoId) {
+                return `https://www.youtube.com/embed/${videoId}`;
+            }
+        }
+    } catch (error) {
+        console.error("Invalid YouTube URL:", url, error);
+    }
+
+    return url;
+};
 
 /* =====================
    HEADER
 ===================== */
-export const Header: React.FC = () => {
 
+export const Header: React.FC = () => {
     const [menuOpen, setMenuOpen] = useState(false);
 
     return (
-
         <header className="header">
             <div className="header__logo">
                 <img src={peach} className="peach" alt="Logo" />
@@ -32,7 +86,7 @@ export const Header: React.FC = () => {
                 ☰
             </button>
 
-            <nav className={`header__nav ${menuOpen ? 'is-open' : ''}`}>
+            <nav className={`header__nav ${menuOpen ? "is-open" : ""}`}>
                 <a href="#overview">Overview</a>
                 <a href="#bio">Bio</a>
                 <a href="#media">Media</a>
@@ -40,23 +94,41 @@ export const Header: React.FC = () => {
             </nav>
         </header>
     );
-}
+};
 
 /* =====================
    HERO
 ===================== */
+
 export const Hero: React.FC = () => (
     <section className="hero">
         <div className="hero__text">
-            <div className="ProjectName"> <img src={logo} height="300 em" className="logo" alt="A Neutered Fruit text logo" /></div>
-            <p>... a lot will happen but it feels seemless. One moment it will be like funky prog, next it's computer game meets metal and it somehow works.</p>
+            <div className="ProjectName">
+                <img
+                    src={logo}
+                    height="300"
+                    className="logo"
+                    alt="A Neutered Fruit text logo"
+                />
+            </div>
+
+            <p>
+                ... a lot will happen but it feels seemless. One moment it will
+                be like funky prog, next it's computer game meets metal and it
+                somehow works.
+            </p>
+
             <div className="hero__buttons">
-                <a href="#contact"><button className="btn">Contact</button></a>
+                <a href="#contact">
+                    <button className="btn">Contact</button>
+                </a>
+
                 <button className="btn">Download</button>
             </div>
         </div>
+
         <div className="hero__image">
-            <img src={hero} alt="Hero" />
+            <img src={hero} alt="A Neutered Fruit" />
         </div>
     </section>
 );
@@ -64,27 +136,35 @@ export const Hero: React.FC = () => (
 /* =====================
    OVERVIEW
 ===================== */
+
 export const Overview: React.FC = () => (
     <section id="overview" className="overview">
         <h3>Overview</h3>
 
         <div className="overview_content">
 
-            {/* <div className="overview__column">
-            <h3>Upcoming Shows</h3>
-            <ul>
-                <li>Show A</li>
-                <li>Show B</li>
-            </ul>
-        </div> */}
             <div className="overview__column">
                 <h3>Location</h3>
                 <p>Dublin, Ireland</p>
             </div>
+
             <div className="overview__column">
                 <h3>Releases</h3>
+
                 <ul>
-                    <iframe style={{ border: 0, width: '100%', height: '42px' }} src="https://bandcamp.com/EmbeddedPlayer/album=325852699/size=small/bgcol=333333/linkcol=0f91ff/transparent=true/" seamless><a href="https://aneuteredfruit.bandcamp.com/album/we-dont-get-out-much">We Don&#39;t Get Out Much by a neutered fruit</a></iframe>
+                    <iframe
+                        style={{
+                            border: 0,
+                            width: "100%",
+                            height: "42px",
+                        }}
+                        src="https://bandcamp.com/EmbeddedPlayer/album=325852699/size=small/bgcol=333333/linkcol=0f91ff/transparent=true/"
+                        seamless
+                    >
+                        <a href="https://aneuteredfruit.bandcamp.com/album/we-dont-get-out-much">
+                            We Don't Get Out Much by a neutered fruit
+                        </a>
+                    </iframe>
                 </ul>
             </div>
         </div>
@@ -94,21 +174,28 @@ export const Overview: React.FC = () => (
 /* =====================
    BIOGRAPHY
 ===================== */
+
 export const Biography: React.FC = () => {
     const [expanded, setExpanded] = useState(false);
 
     return (
         <section id="bio" className="bio">
             <h3>Biography</h3>
+
             <p>
-                {expanded
-                    ? <>An instrumental progressive rock duo from Dublin, Ireland. They aspire for an expansive, high-energy sound that blends ideas from a bunch of different worlds. The duo first met in 2016 through UCD’s Jazz Society, bonding over their shared love of an ecclectic mix of music. Performing together college events for the Jazz Society they began to explore musically ideas. <br /> <br />
-                        They became active in Dublin’s broader music scene, collaborating with acts like Francis Helmet and Sisterix, and performing at venues such as The Button Factory, Marlay Park, and Electric Picnic. Between rehearsals, they often jammed on old punk tunes, which eventually led them to form the cover band Susie and The Switchblades. With a rotating lineup, the band quickly gained momentum performing in venues like Fibber Magees, The Sound House, and Workman’s.  <br /> <br />
-                        Eager to push their creativity further, Stuart and Saoirse began writing original material. They initially explored a singer-songwriter approach, performing stripped-down acoustic sets at open mics, but soon realized their energy was better suited to louder, more absurd sounds. Embracing an instrumental format allowed them to fully express their ideas, borrowing notions from program music and focusing on three guiding principles: the music should make them laugh, have strong melodic content, and remain engaging to play. Crafting a concept for the album around their experiences during the pandemic, they recorded their new material at Beardfire Studios.  <br /> <br />
-                        Their debut album 'We Don't Get Out Much' was released on January 2nd, 2026. Using their decade of friendship and experience performing together the duo now are taking their original music on the road for the first time. Their debut album marks a significant milestone, showcasing their growth as original artists and cementing their presence in Ireland’s contemporary music landscape.</>
-                    : "An instrumental progressive rock duo from Dublin, Ireland. They aspire for an expansive, high-energy sound that blends ideas from a bunch of different worlds."}
+                {expanded ? (
+                    <>
+                        A Neutered Fruit are an Irish prog rock duo, cooked up from a healthy helping of chaos, beauty, and a touch of takin the piss. The pair first met performing jazz gigs together in college. Hitting it off, they worked with a variety of local acts, playing at Marlay Park and Electric Picnic. During lockdown, they began writing together as a creative outlet, drawing inspiration heavily from bands like The Mars Volta and Mastodon, along with whatever they were obsessed with that week. Those early ideas became their debut release, We Don't Get Out Much. Released in early 2026, blending majestic melodies, riotous riffs and colourful chords they're an act you won't forget quickly.
+                    </>
+                ) : (
+                    "An instrumental progressive rock duo from Dublin, Ireland. They aspire for an expansive, high-energy sound that blends ideas from a bunch of different worlds."
+                )}
             </p>
-            <button className="btn" onClick={() => setExpanded(!expanded)}>
+
+            <button
+                className="btn"
+                onClick={() => setExpanded(!expanded)}
+            >
                 {expanded ? "Show Less" : "Read More"}
             </button>
         </section>
@@ -118,15 +205,21 @@ export const Biography: React.FC = () => {
 /* =====================
    SOUND STYLE
 ===================== */
+
 export const SoundStyle: React.FC = () => (
     <section className="sound">
         <h3>Sound & Style</h3>
-        <p>We often say that the only thing that defines if an idea will make it, is if during the jam it makes us laugh.</p>
 
+        <p>
+            We often say that the only thing that defines if an idea will make
+            it, is if during the jam it makes us laugh.
+        </p>
 
         <div className="sound__grid">
+
             <div>
                 <h4>Some of Our Influences</h4>
+
                 <ul>
                     <li>The Mars Volta</li>
                     <li>Mastodon</li>
@@ -138,6 +231,7 @@ export const SoundStyle: React.FC = () => (
 
             <div>
                 <h4>Key Characteristics</h4>
+
                 <ul>
                     <li>Overplaying</li>
                     <li>Lots of changes</li>
@@ -148,7 +242,10 @@ export const SoundStyle: React.FC = () => (
             </div>
 
             <details>
-                <summary><h4>Some of Saoirse's Favourites</h4></summary>
+                <summary>
+                    <h4>Some of Saoirse's Favourites</h4>
+                </summary>
+
                 <ul>
                     <li>Baroness</li>
                     <li>St Vincent</li>
@@ -159,7 +256,10 @@ export const SoundStyle: React.FC = () => (
             </details>
 
             <details>
-                <summary><h4>Some of Stu's Favourites</h4></summary>
+                <summary>
+                    <h4>Some of Stu's Favourites</h4>
+                </summary>
+
                 <ul>
                     <li>John Maus</li>
                     <li>Agriculture</li>
@@ -168,29 +268,54 @@ export const SoundStyle: React.FC = () => (
                     <li>Aphex Twin</li>
                 </ul>
             </details>
-        </div>
 
+        </div>
     </section>
 );
 
 /* =====================
    GALLERY + IMAGE VIEWER
 ===================== */
-export const Gallery: React.FC = () => {
-    const [activeImage, setActiveImage] = useState<string | null>(null);
 
-    const images = [livePerformance, videoSnap, mainlogo];
+export const Gallery: React.FC = () => {
+    const [photos, setPhotos] = useState<Photo[]>([]);
+    const [activeImage, setActiveImage] = useState<Photo | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        getPhotos()
+            .then((data) => {
+                setPhotos(data);
+            })
+            .catch((error) => {
+                console.error("Failed to load photos:", error);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    }, []);
 
     return (
         <section id="media" className="gallery">
             <h3>Gallery</h3>
+
+            {loading && <p>Loading gallery...</p>}
+
+            {!loading && photos.length === 0 && (
+                <p>No photos available.</p>
+            )}
+
             <div className="gallery__grid">
-                {images.map(src => (
+                {photos.map((photo) => (
                     <img
-                        key={src}
-                        src={src}
+                        key={photo._id}
+                        src={urlFor(photo.image)
+                            .width(1000)
+                            .quality(85)
+                            .url()}
+                        alt={photo.caption || "A Neutered Fruit"}
                         className="gallery__thumb"
-                        onClick={() => setActiveImage(src)}
+                        onClick={() => setActiveImage(photo)}
                         loading="lazy"
                     />
                 ))}
@@ -198,6 +323,7 @@ export const Gallery: React.FC = () => {
 
             {activeImage && (
                 <div className="image-viewer">
+
                     <button
                         className="image-viewer__close"
                         onClick={() => setActiveImage(null)}
@@ -206,15 +332,32 @@ export const Gallery: React.FC = () => {
                         ✕
                     </button>
 
-                    <img src={activeImage} alt="Expanded" />
+                    <img
+                        src={urlFor(activeImage.image)
+                            .width(2000)
+                            .quality(90)
+                            .url()}
+                        alt={activeImage.caption || "A Neutered Fruit"}
+                    />
+
+                    {activeImage.caption && (
+                        <p>{activeImage.caption}</p>
+                    )}
 
                     <div className="image-viewer__actions">
-                        <a href={activeImage} download>Download HD</a>
-                        <a href={activeImage} download>Download SD</a>
+                        <a
+                            href={urlFor(activeImage.image)
+                                .width(2000)
+                                .quality(95)
+                                .url()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Open HD
+                        </a>
                     </div>
                 </div>
             )}
-
         </section>
     );
 };
@@ -222,41 +365,64 @@ export const Gallery: React.FC = () => {
 /* =====================
    VIDEO PLAYER
 ===================== */
-export const VideoSection: React.FC = () => (
-    <section className="video">
-        <h3>Videos</h3>
 
-        <div className="video__row">
-            <div className="video__group">
-                <h4>Music Video</h4>
-                <div className="video__embed">
-                    <iframe
-                        src="https://www.youtube.com/embed/fls4XWgIFOQ"
-                        title="Music Video"
-                        allowFullScreen
-                    />
-                </div>
+export const VideoSection: React.FC = () => {
+    const [videos, setVideos] = useState<Video[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        getVideos()
+            .then((data) => {
+                setVideos(data);
+            })
+            .catch((error) => {
+                console.error("Failed to load videos:", error);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
+    }, []);
+
+    return (
+        <section className="video">
+            <h3>Videos</h3>
+
+            {loading && <p>Loading videos...</p>}
+
+            {!loading && videos.length === 0 && (
+                <p>No videos available.</p>
+            )}
+
+            <div className="video__row">
+                {videos.map((video) => (
+                    <div
+                        className="video__group"
+                        key={video._id}
+                    >
+                        <h4>{video.title}</h4>
+
+                        <div className="video__embed">
+                            <iframe
+                                src={getYouTubeEmbedUrl(video.youtubeUrl)}
+                                title={video.title}
+                                allowFullScreen
+                            />
+                        </div>
+
+                        {video.description && (
+                            <p>{video.description}</p>
+                        )}
+                    </div>
+                ))}
             </div>
-
-
-            <div className="video__group">
-                <h4>Live Performance</h4>
-                <div className="video__embed">
-                    <iframe
-                        src="https://www.youtube.com/embed/qXgKf-SQpQI"
-                        title="Live Performance"
-                        allowFullScreen
-                    />
-                </div>
-            </div>
-        </div>
-
-    </section>
-);
+        </section>
+    );
+};
 
 /* =====================
    CONTACTS
 ===================== */
+
 export const Contacts: React.FC = () => (
     <section id="contact" className="contacts">
         <h3>Contact</h3>
@@ -267,13 +433,37 @@ export const Contacts: React.FC = () => (
 /* =====================
    FOOTER
 ===================== */
+
 export const Footer: React.FC = () => (
     <footer className="footer">
-        <div className="footer__logo">          <img src={peach} className="peach" alt="A Neutered Fruit Peach logo" />
+        <div className="footer__logo">
+            <img
+                src={peach}
+                className="peach"
+                alt="A Neutered Fruit Peach logo"
+            />
         </div>
+
         <div className="footer__social">
-            <a href="https://www.instagram.com/a_neutered_fruit/"><img src={instagram} className="social-icon" alt="Instagram" width="60" height="60" /></a>
-            <a href="https://aneuteredfruit.bandcamp.com/album/we-dont-get-out-much"><img src={bandcamp} className="social-icon" alt="Bandcamp" width="60" height="60" /></a>
+            <a href="https://www.instagram.com/a_neutered_fruit/">
+                <img
+                    src={instagram}
+                    className="social-icon"
+                    alt="Instagram"
+                    width="60"
+                    height="60"
+                />
+            </a>
+
+            <a href="https://aneuteredfruit.bandcamp.com/album/we-dont-get-out-much">
+                <img
+                    src={bandcamp}
+                    className="social-icon"
+                    alt="Bandcamp"
+                    width="60"
+                    height="60"
+                />
+            </a>
         </div>
     </footer>
 );
@@ -281,26 +471,45 @@ export const Footer: React.FC = () => (
 /* =====================
    PAGE COMPOSITION
 ===================== */
+
 export const Page: React.FC = () => (
     <>
         <Header />
-        <hr className='divider' />
+
+        <hr className="divider" />
+
         <Hero />
-        <hr className='divider' />
+
+        <hr className="divider" />
+
         <Overview />
-        <hr className='divider' />
+
+        <hr className="divider" />
+
         <Biography />
-        <hr className='divider' />
+
+        <hr className="divider" />
+
         <SoundStyle />
-        <hr className='divider' />
+
+        <hr className="divider" />
+
         <Gallery />
-        <hr className='divider' />
+
+        <hr className="divider" />
+
         <VideoSection />
-        <hr className='divider' />
+
+        <hr className="divider" />
+
         <Map />
-        <hr className='divider' />
+
+        <hr className="divider" />
+
         <Contacts />
-        <hr className='divider' />
+
+        <hr className="divider" />
+
         <Footer />
     </>
 );
