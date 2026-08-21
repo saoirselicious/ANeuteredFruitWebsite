@@ -124,7 +124,7 @@ export default function VenueMap() {
             showCancelButton: true,
             showConfirmButton: false,
             cancelButtonText: "Close",
-            height: "auto",
+            heightAuto: true,
         }).then((result) => {
             if (result.isConfirmed) {
                 setSelectedShow(show);
