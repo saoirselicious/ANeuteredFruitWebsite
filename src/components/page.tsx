@@ -6,9 +6,13 @@ import hero from "../assets/hero-smaller.jpg";
 import bandcamp from "../assets/bandcamp.png";
 import instagram from "../assets/instagram.png";
 
-import Map from "./map";
+import { jsPDF } from "jspdf";
 
-import { getPhotos, getVideos } from "../sanityQueries";
+import Map from "./map";
+import Swal from "sweetalert2";
+import "sweetalert2/dist/sweetalert2.min.css";
+
+import { getPhotos, getVideos, getShows } from "../sanityQueries";
 import { urlFor, type SanityImageSource } from "../sanityImage";
 
 /* =====================
@@ -32,6 +36,19 @@ type Video = {
     description?: string;
     sortOrder?: number;
 };
+
+export const BIOGRAPHY_TEXT_SHORT =
+    "An instrumental progressive rock duo from Dublin, Ireland. They aspire for an expansive, high-energy sound that blends ideas from a bunch of different worlds.";
+
+export const BIOGRAPHY_TEXT_LONG = `An instrumental progressive rock duo from Dublin, Ireland. They aspire for an expansive, high-energy sound that blends ideas from a bunch of different worlds. The duo first met in 2016 through UCD’s Jazz Society, bonding over their shared love of an ecclectic mix of music. Performing together college events for the Jazz Society they began to explore musically ideas.
+
+They became active in Dublin’s broader music scene, collaborating with acts like Francis Helmet and Sisterix, and performing at venues such as The Button Factory, Marlay Park, and Electric Picnic. Between rehearsals, they often jammed on old punk tunes, which eventually led them to form the cover band Susie and The Switchblades. With a rotating lineup, the band quickly gained momentum performing in venues like Fibber Magees, The Sound House, and Workman’s.
+
+Eager to push their creativity further, Stuart and Saoirse began writing original material. They initially explored a singer-songwriter approach, performing stripped-down acoustic sets at open mics, but soon realized their energy was better suited to louder, more absurd sounds. Embracing an instrumental format allowed them to fully express their ideas, borrowing notions from program music and focusing on three guiding principles: the music should make them laugh, have strong melodic content, and remain engaging to play. Crafting a concept for the album around their experiences during the pandemic, they recorded their new material at Beardfire Studios.
+
+Their debut album 'We Don't Get Out Much' was released on January 2nd, 2026. Using their decade of friendship and experience performing together the duo now are taking their original music on the road for the first time. Their debut album marks a significant milestone, showcasing their growth as original artists and cementing their presence in Ireland’s contemporary music landscape.`;
+
+export const SOUND_STYLE_TEXT = `We often say that the only thing that defines if an idea will make it, is if during the jam it makes us laugh.`;
 
 const getYouTubeEmbedUrl = (url: string): string => {
     try {
@@ -65,6 +82,228 @@ const getYouTubeEmbedUrl = (url: string): string => {
     return url;
 };
 
+const downloadEPK = async () => {
+    const pdf = new jsPDF();
+
+    let shows: any[] = [];
+    try {
+        shows = await getShows();
+    } catch (err) {
+        console.error("Failed to load shows for EPK:", err);
+        shows = [];
+    }
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+
+    let y = 25;
+
+    // Title
+    pdf.setFontSize(24);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("A NEUTERED FRUIT", pageWidth / 2, y, {
+        align: "center",
+    });
+
+    y += 10;
+
+    pdf.setFontSize(12);
+    pdf.setFont("helvetica", "normal");
+    pdf.text("Instrumental Progressive Rock", pageWidth / 2, y, {
+        align: "center",
+    });
+
+    y += 20;
+
+    // Biography
+    pdf.setFontSize(16);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Biography", 20, y);
+
+    y += 8;
+
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+
+    const bio = `A Neutered Fruit are an Irish prog rock duo, cooked up from a healthy helping of chaos, beauty, and a touch of takin the piss. The pair first met performing jazz gigs together in college. Hitting it off, they worked with a variety of local acts, playing at Marlay Park and Electric Picnic. During lockdown, they began writing together as a creative outlet, drawing inspiration heavily from bands like The Mars Volta and Mastodon, along with whatever they were obsessed with that week. Those early ideas became their debut release, We Don't Get Out Much. Released in early 2026, blending majestic melodies, riotous riffs and colourful chords they're an act you won't forget quickly.`;
+
+    const bioLines = pdf.splitTextToSize(
+        bio,
+        pageWidth - 40
+    );
+
+    pdf.text(bioLines, 20, y);
+
+    y += bioLines.length * 5 + 15;
+
+    // Music
+    pdf.setFontSize(16);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Music", 20, y);
+
+    y += 8;
+
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+
+    pdf.text(
+        "We Don't Get Out Much — Debut Album",
+        20,
+        y
+    );
+
+    y += 6;
+
+    pdf.text(
+        "https://aneuteredfruit.bandcamp.com/album/we-dont-get-out-much",
+        20,
+        y
+    );
+
+    y += 15;
+
+    // Shows
+    pdf.setFontSize(16);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Upcoming Shows", 20, y);
+
+    y += 8;
+
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+
+    // only include shows on or after today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const upcomingShows = (shows || []).filter((show) => {
+        if (!show || !show.date) return false;
+        const showDate = new Date(`${show.date}T12:00:00`);
+        return showDate >= today;
+    });
+
+    if (upcomingShows.length === 0) {
+        pdf.text(
+            "No upcoming shows currently listed.",
+            20,
+            y
+        );
+
+        y += 8;
+    } else {
+        upcomingShows.forEach((show) => {
+            const date = new Date(
+                `${show.date}T12:00:00`
+            ).toLocaleDateString("en-IE", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+            });
+
+            pdf.setFont("helvetica", "bold");
+
+            pdf.text(
+                `${date} — ${show.venue}`,
+                20,
+                y
+            );
+
+            y += 5;
+
+            pdf.setFont("helvetica", "normal");
+
+            pdf.text(
+                show.city,
+                20,
+                y
+            );
+
+            y += 5;
+
+            if (
+                show.otherBands &&
+                show.otherBands.length > 0
+            ) {
+                pdf.text(
+                    `Also playing: ${show.otherBands.join(", ")}`,
+                    20,
+                    y
+                );
+
+                y += 5;
+            }
+
+            if (show.promoter) {
+                pdf.text(
+                    `Presented by: ${show.promoter}`,
+                    20,
+                    y
+                );
+
+                y += 5;
+            }
+
+            y += 5;
+
+            // Start a new page if necessary
+            if (y > 270) {
+                pdf.addPage();
+                y = 25;
+            }
+        });
+    }
+
+    // Contact
+    if (y > 240) {
+        pdf.addPage();
+        y = 25;
+    }
+
+    pdf.setFontSize(16);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Contact", 20, y);
+
+    y += 8;
+
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+
+    pdf.text(
+        "A Neutered Fruit",
+        20,
+        y
+    );
+
+    y += 5;
+
+    pdf.text(
+        "Dublin, Ireland",
+        20,
+        y
+    );
+
+    y += 5;
+
+    pdf.text(
+        "https://aneuteredfruit.com",
+        20,
+        y
+    );
+
+    y += 5;
+
+    pdf.text(
+        "https://aneuteredfruit.bandcamp.com",
+        20,
+        y
+    );
+
+    // Open PDF in a new tab
+    const blob = pdf.output("blob");
+    const url = URL.createObjectURL(blob);
+
+    window.open(url, "_blank");
+};
+
 /* =====================
    HEADER
 ===================== */
@@ -87,9 +326,11 @@ export const Header: React.FC = () => {
             </button>
 
             <nav className={`header__nav ${menuOpen ? "is-open" : ""}`}>
-                <a href="#overview">Overview</a>
-                <a href="#bio">Bio</a>
-                <a href="#media">Media</a>
+                <a href="#gig">Gigs</a>
+                <a href="#listen">Listen</a>
+                <a href="#photo">Photos</a>
+                <a href="#video">Videos</a>
+
                 <a href="#contact">Contact</a>
             </nav>
         </header>
@@ -123,7 +364,9 @@ export const Hero: React.FC = () => (
                     <button className="btn">Contact</button>
                 </a>
 
-                <button className="btn">Download</button>
+                <button className="btn" onClick={downloadEPK}>
+                    Download
+                </button>
             </div>
         </div>
 
@@ -134,144 +377,37 @@ export const Hero: React.FC = () => (
 );
 
 /* =====================
-   OVERVIEW
+   Listen
 ===================== */
 
-export const Overview: React.FC = () => (
-    <section id="overview" className="overview">
-        <h3>Overview</h3>
+export const Listen: React.FC = () => (
+    <section id="listen" className="listen">
+        <h3>Listen</h3>
 
-        <div className="overview_content">
-            <div className="overview__column">
-                <h3>Location</h3>
-                <p>Dublin, Ireland</p>
-            </div>
+        <div className="listen_content">
 
-            <div className="overview__column">
-                <h3>Releases</h3>
 
-                <div className="bandcamp-player">
-                    <iframe
-                        style={{
-                            border: 0,
-                            width: "350px",
-                            height: "654px",
-                        }}
-                        src="https://bandcamp.com/EmbeddedPlayer/album=325852699/size=large/bgcol=ffffff/linkcol=0687f5/transparent=true/"
-                        seamless
-                    >
-                        <a href="https://aneuteredfruit.bandcamp.com/album/we-dont-get-out-much">
-                            We Don't Get Out Much by a
-                            neutered fruit
-                        </a>
-                    </iframe>
-                </div>
+            <div className="bandcamp-player">
+                <iframe
+                    style={{
+                        border: 0,
+                        width: "350px",
+                        height: "654px",
+                    }}
+                    src="https://bandcamp.com/EmbeddedPlayer/album=325852699/size=large/bgcol=ffffff/linkcol=0687f5/transparent=true/"
+                    seamless
+                >
+                    <a href="https://aneuteredfruit.bandcamp.com/album/we-dont-get-out-much">
+                        We Don't Get Out Much by a
+                        neutered fruit
+                    </a>
+                </iframe>
             </div>
         </div>
     </section>
 );
 
-/* =====================
-   BIOGRAPHY
-===================== */
 
-export const Biography: React.FC = () => {
-    const [expanded, setExpanded] = useState(false);
-
-    return (
-        <section id="bio" className="bio">
-            <h3>Biography</h3>
-
-            <p>
-                {expanded ? (
-                    <>
-                        A Neutered Fruit are an Irish prog rock duo, cooked up from a healthy helping of chaos, beauty, and a touch of takin the piss. The pair first met performing jazz gigs together in college. Hitting it off, they worked with a variety of local acts, playing at Marlay Park and Electric Picnic. During lockdown, they began writing together as a creative outlet, drawing inspiration heavily from bands like The Mars Volta and Mastodon, along with whatever they were obsessed with that week. Those early ideas became their debut release, We Don't Get Out Much. Released in early 2026, blending majestic melodies, riotous riffs and colourful chords they're an act you won't forget quickly.
-                    </>
-                ) : (
-                    "An instrumental progressive rock duo from Dublin, Ireland. They aspire for an expansive, high-energy sound that blends ideas from a bunch of different worlds."
-                )}
-            </p>
-
-            <button
-                className="btn"
-                onClick={() => setExpanded(!expanded)}
-            >
-                {expanded ? "Show Less" : "Read More"}
-            </button>
-        </section>
-    );
-};
-
-/* =====================
-   SOUND STYLE
-===================== */
-
-export const SoundStyle: React.FC = () => (
-    <section className="sound">
-        <h3>Sound & Style</h3>
-
-        <p>
-            We often say that the only thing that defines if an idea will make
-            it, is if during the jam it makes us laugh.
-        </p>
-
-        <div className="sound__grid">
-
-            <div>
-                <h4>Some of Our Influences</h4>
-
-                <ul>
-                    <li>The Mars Volta</li>
-                    <li>Mastodon</li>
-                    <li>Chelsea Wolfe</li>
-                    <li>The Dillinger Escape Plan</li>
-                    <li>Paramore</li>
-                </ul>
-            </div>
-
-            <div>
-                <h4>Key Characteristics</h4>
-
-                <ul>
-                    <li>Overplaying</li>
-                    <li>Lots of changes</li>
-                    <li>Uncommon harmony</li>
-                    <li>Hooks</li>
-                    <li>Drama</li>
-                </ul>
-            </div>
-
-            <details>
-                <summary>
-                    <h4>Some of Saoirse's Favourites</h4>
-                </summary>
-
-                <ul>
-                    <li>Baroness</li>
-                    <li>St Vincent</li>
-                    <li>Between the Buried and Me</li>
-                    <li>Nobuo Uematsu</li>
-                    <li>Julian Lage</li>
-                </ul>
-            </details>
-
-            <details>
-                <summary>
-                    <h4>Some of Stu's Favourites</h4>
-                </summary>
-
-                <ul>
-                    <li>John Maus</li>
-                    <li>Agriculture</li>
-                    <li>Blood Incantation</li>
-                    <li>Gentle Giant</li>
-                    <li>Aphex Twin</li>
-                </ul>
-            </details>
-
-        </div>
-    </section>
-);
 
 /* =====================
    GALLERY + IMAGE VIEWER
@@ -281,6 +417,9 @@ export const Gallery: React.FC = () => {
     const [photos, setPhotos] = useState<Photo[]>([]);
     const [activeImage, setActiveImage] =
         useState<Photo | null>(null);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    const [slideIndex, setSlideIndex] = useState(0);
 
     const [activeCategory, setActiveCategory] =
         useState("all");
@@ -334,26 +473,120 @@ export const Gallery: React.FC = () => {
                     activeCategory
             );
 
+    useEffect(() => {
+        setSlideIndex(0);
+    }, [photos]);
+
+    useEffect(() => {
+        if (photos.length <= 1) return;
+
+        const id = setInterval(() => {
+            setSlideIndex((s) => (photos.length ? (s + 1) % photos.length : 0));
+        }, 5000);
+
+        return () => clearInterval(id);
+    }, [photos]);
+
+    const openImageModal = (items: Photo[], index: number) => {
+        const img = items[index];
+        const imgUrl = urlFor(img.image).width(1600).quality(95).url();
+        const isMobile = typeof window !== 'undefined' && window.innerWidth <= 480;
+
+        Swal.fire({
+            html: `<div><img src=\"${imgUrl}\" style=\"max-width:100%;object-fit:contain;display:block;margin:0 auto;\"/></div>`,
+            customClass: { popup: `swal-image-popup${isMobile ? ' swal-image-popup-mobile' : ''}` },
+            showCloseButton: false,
+            showCancelButton: true,
+            confirmButtonText: "Back",
+            cancelButtonText: "Close",
+            width: isMobile ? '40%' : 'auto',
+            heightAuto: false,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // reopen gallery for the same category
+                openGalleryModal(items);
+            }
+        });
+    };
+
+    const openGalleryModal = (items: Photo[]) => {
+        const html = `<div class=\"swal-gallery-grid\">${items
+            .map((p, i) => {
+                const thumb = urlFor(p.image).width(400).quality(80).url();
+                return `<img src=\"${thumb}\" data-idx=\"${i}\" class=\"swal-thumb\" alt=\"${(p.caption || '')}\"/>`;
+            })
+            .join("")}</div>`;
+
+        Swal.fire({
+            title: "Gallery",
+            html,
+            showCloseButton: true,
+            showCancelButton: true,
+            cancelButtonText: "Close",
+            width: "90%",
+            heightAuto: false,
+            didOpen: () => {
+                const container = document.querySelectorAll('.swal-thumb');
+                container.forEach((el) => {
+                    el.addEventListener('click', (e) => {
+                        const idx = Number((e.currentTarget as HTMLElement).getAttribute('data-idx'));
+                        Swal.close();
+                        openImageModal(items, idx);
+                    });
+                });
+            },
+        });
+    };
+
     return (
-        <section id="media" className="gallery">
+        <section id="photo" className="gallery">
             <h3>Photos</h3>
 
             {/* CATEGORY TABS */}
+
+            {/* Mobile hamburger (shown only on small screens) */}
+            <div className={`media-hamburger ${mobileMenuOpen ? 'open' : ''}`}>
+                <button
+                    className="btn"
+                    aria-haspopup="menu"
+                    aria-expanded={mobileMenuOpen}
+                    onClick={() => setMobileMenuOpen((s) => !s)}
+                >
+                    Categories ▾
+                </button>
+
+                <div className="media-dropdown" role="menu">
+                    {categories.map((category) => (
+                        <button
+                            key={category.value}
+                            className={`btn ${activeCategory === category.value ? 'media-tabs__active' : ''}`}
+                            onClick={() => {
+                                const items = category.value === 'all' ? photos : photos.filter(p => p.category === category.value);
+                                setActiveCategory(category.value);
+                                openGalleryModal(items);
+                                setMobileMenuOpen(false);
+                            }}
+                        >
+                            {category.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
             <div className="media-tabs">
                 {categories.map((category) => (
                     <button
                         key={category.value}
                         className={`btn ${activeCategory ===
-                                category.value
-                                ? "media-tabs__active"
-                                : ""
+                            category.value
+                            ? "media-tabs__active"
+                            : ""
                             }`}
-                        onClick={() =>
-                            setActiveCategory(
-                                category.value
-                            )
-                        }
+                        onClick={() => {
+                            const items = category.value === 'all' ? photos : photos.filter(p => p.category === category.value);
+                            setActiveCategory(category.value);
+                            openGalleryModal(items);
+                        }}
                     >
                         {category.label}
                     </button>
@@ -371,26 +604,40 @@ export const Gallery: React.FC = () => {
                     </p>
                 )}
 
-            <div className="gallery__grid">
-                {filteredPhotos.map((photo) => (
-                    <img
-                        key={photo._id}
-                        src={urlFor(photo.image)
-                            .width(1000)
-                            .quality(85)
-                            .url()}
-                        alt={
-                            photo.caption ||
-                            "A Neutered Fruit"
-                        }
-                        className="gallery__thumb"
+            {photos.length > 0 && (
+                <div className="gallery-slideshow">
+                    <button
+                        className="gallery-nav"
+                        aria-label="Previous"
                         onClick={() =>
-                            setActiveImage(photo)
+                            setSlideIndex((s) =>
+                                s <= 0 ? photos.length - 1 : s - 1
+                            )
                         }
-                        loading="lazy"
+                    >
+                        ‹
+                    </button>
+
+                    <img
+                        src={urlFor(photos[slideIndex % photos.length].image)
+                            .width(1200)
+                            .quality(90)
+                            .url()}
+                        alt={photos[slideIndex % photos.length].caption || "A Neutered Fruit"}
+                        onClick={() => openImageModal(photos, slideIndex % photos.length)}
                     />
-                ))}
-            </div>
+
+                    <button
+                        className="gallery-nav"
+                        aria-label="Next"
+                        onClick={() =>
+                            setSlideIndex((s) => (s + 1) % photos.length)
+                        }
+                    >
+                        ›
+                    </button>
+                </div>
+            )}
 
             {/* IMAGE VIEWER */}
 
@@ -466,6 +713,7 @@ export const VideoSection: React.FC = () => {
 
     const [activeCategory, setActiveCategory] =
         useState("all");
+    const [videoMobileMenuOpen, setVideoMobileMenuOpen] = useState(false);
 
     const [loading, setLoading] =
         useState(true);
@@ -515,10 +763,36 @@ export const VideoSection: React.FC = () => {
             );
 
     return (
-        <section className="video">
+        <section id="video" className="video">
             <h3>Videos</h3>
 
             {/* CATEGORY TABS */}
+
+            <div className={`media-hamburger ${videoMobileMenuOpen ? 'open' : ''}`}>
+                <button
+                    className="btn"
+                    aria-haspopup="menu"
+                    aria-expanded={videoMobileMenuOpen}
+                    onClick={() => setVideoMobileMenuOpen((s) => !s)}
+                >
+                    Categories ▾
+                </button>
+
+                <div className="media-dropdown" role="menu">
+                    {categories.map((category) => (
+                        <button
+                            key={category.value}
+                            className={`btn ${activeCategory === category.value ? 'media-tabs__active' : ''}`}
+                            onClick={() => {
+                                setActiveCategory(category.value);
+                                setVideoMobileMenuOpen(false);
+                            }}
+                        >
+                            {category.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
             <div className="media-tabs">
                 {categories.map((category) => (
@@ -637,38 +911,47 @@ export const Footer: React.FC = () => (
 export const Page: React.FC = () => (
     <>
         <Header />
+        <hr className="divider" />
+
+        <div className="section-inner">
+            <Hero />
+        </div>
 
         <hr className="divider" />
 
-        <Hero />
+        <div className="section-inner">
+            <Map />
+        </div>
 
         <hr className="divider" />
 
-        <Overview />
+
+        <div className="section-inner">
+            <Listen />
+        </div>
+
+        {/* Biography and SoundStyle removed from page; texts are available as exported variables */}
 
         <hr className="divider" />
 
-        <Biography />
+        <div className="section-inner">
+            <Gallery />
+        </div>
 
         <hr className="divider" />
 
-        <SoundStyle />
+        <div className="section-inner">
+            <VideoSection />
+        </div>
+
+
+
 
         <hr className="divider" />
 
-        <Gallery />
-
-        <hr className="divider" />
-
-        <VideoSection />
-
-        <hr className="divider" />
-
-        <Map />
-
-        <hr className="divider" />
-
-        <Contacts />
+        <div className="section-inner">
+            <Contacts />
+        </div>
 
         <hr className="divider" />
 

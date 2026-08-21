@@ -122,9 +122,9 @@ export default function VenueMap() {
             html: htmlParts.join(""),
             showCloseButton: true,
             showCancelButton: true,
-            confirmButtonText: "Open Details",
+            showConfirmButton: false,
             cancelButtonText: "Close",
-            width: "680px",
+            height: "auto",
         }).then((result) => {
             if (result.isConfirmed) {
                 setSelectedShow(show);
@@ -195,7 +195,7 @@ export default function VenueMap() {
 
     if (loading) {
         return (
-            <section className="map">
+            <section id="gig" className="map">
                 <h2>Gigs</h2>
                 <p>Loading gigs...</p>
             </section>
@@ -245,14 +245,14 @@ export default function VenueMap() {
 
                     <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
                         <button
-                            className={`btn ${showsCategory === "upcoming" ? "gig-tabs__active" : ""}`}
+                            className={`btn tab-upcoming ${showsCategory === "upcoming" ? "gig-tabs__active" : ""}`}
                             onClick={() => setShowsCategory("upcoming")}
                         >
                             Upcoming
                         </button>
 
                         <button
-                            className={`btn ${showsCategory === "past" ? "gig-tabs__active" : ""}`}
+                            className={`btn tab-past ${showsCategory === "past" ? "gig-tabs__active" : ""}`}
                             onClick={() => setShowsCategory("past")}
                         >
                             Past
